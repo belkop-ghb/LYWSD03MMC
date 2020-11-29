@@ -5,7 +5,7 @@
 # Thanks to the author.
 #
 # Reference: http://www.d0wn.com/using-bash-and-gatttool-to-get-readings-from-xiaomi-mijia-lywsd03mmc-temperature-humidity-sensor/
-#			 https://github.com/thiagogalvao/LYWSD03MMC
+#            https://github.com/thiagogalvao/LYWSD03MMC
 #
 # This version works fine in a Raspberry Pi 3+.
 # Use crontab to scheduler an execution every minute.
@@ -21,38 +21,41 @@
 #
 # 
 
-sensor_name="Sensor"
-mac_address_list=("a4:c1:38:0a:5b:87")
-mqtt_server="localhost"
+debug_print() {
+	if [ $DEBUG -eq 1 ]; then
+		echo "$@"
+	fi
+}
 
-for count in ${!mac_address_list[@]}; do
-    idx=$(expr "$count" + "1")
-    mac_address=${mac_address_list[$count]}
-    sensor_name_idx="$sensor_name$idx"
+DEBUG=1
 
-    bt=$(timeout 15 gatttool -b $mac_address --char-write-req --handle='0x0038' --value="0100" --listen)
-    if [ -z "$bt" ]
+
+ARRAY=( "livingroom#a4:c1:38:0a:5b:87")
+
+for item in "${ARRAY[@]}" ; do
+    room="${item%%#*}"
+    mac_address="${item##*#}"
+	
+	debug_print "MAC:"$mac_address
+	debug_print "SensorName:"$room
+
+    data=$(timeout 15 gatttool -b $mac_address --char-write-req --handle='0x0038' --value="0100" --listen  | grep "Notification handle" -m 1)
+    if [ -z "$data" ]
     then
-        echo "The reading failed"
+        debug_print "The reading failed"
     else
-        echo "Got data"
-        #echo $bt 
-        temphexa=$(echo $bt | awk -F ' ' '{print $12$11}'| tr [:lower:] [:upper:] )
-        humhexa=$(echo $bt | awk -F ' ' '{print $13}'| tr [:lower:] [:upper:])
+        debug_print "Got data"
+        temphexa=$(echo $data | awk -F ' ' '{print $7$6}'| tr [:lower:] [:upper:] )
+        humhexa=$(echo $data | awk -F ' ' '{print $8}'| tr [:lower:] [:upper:])
+		
         temperature100=$(echo "ibase=16; $temphexa" | bc)
+		
         humidity=$(echo "ibase=16; $humhexa" | bc)
         temperature=$(echo "scale=2;$temperature100/100"|bc)
-        echo $temperature
-        echo $humidity
-  
- #       if [ ! ${#temperature} -ge 6 ] 
- #       then
- #          mosquitto_pub -h $mqtt_server -m $temperature -t /LYWSD03MMC/$sensor_name_idx/Temperature -d
- #       fi
-
-#        if [ ! ${#humidity} -ge 3 ] 
-#        then
-#           mosquitto_pub -h $mqtt_server -m $humidity -t /LYWSD03MMC/$sensor_name_idx/Humidity -d
-#        fi
+		battery=$(timeout 15 gatttool -b $mac_address --char-read --uuid 0x2a19  | awk '{print "ibase=16;", $4}' | bc)
+		
+        debug_print "Temp:"$temperature
+        debug_print "Hum:"$humidity
+		debug_print "Batt:"$battery
     fi
 done
