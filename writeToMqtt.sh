@@ -213,7 +213,7 @@ mqtt_publish() {
 		COMMAND="$COMMAND -P $BROKER_PWD"
 	fi
 	
-	COMMAND="$COMMAND -t $topic -m $value"
+	COMMAND="$COMMAND -t $topic -m $value --retain"
 	debug_print "Command: $COMMAND"
 	
 	published=eval ${COMMAND}
