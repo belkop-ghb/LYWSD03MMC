@@ -1,11 +1,13 @@
 #!/bin/bash
 #
 # Simple script to report temperature, humidity and battery level of
-# Xiaomi Mijia Bluetooth Temperature and Humidity Sensor to MQTT.
+# Xiaomi Mijia Bluetooth Temperature and Humidity Sensor LYWSD03MMC to MQTT.
 # Requires gatttool, mosquitto_pub, bc and xxd tools to be installed.
 #
 # On Ubuntu 18.04 the required packages can be installed with:
 # apt install xxd bc mosquitto-clients bluez
+#
+# This is a modification of multiple previous scripts. Thanks to the authors.
 #
 ### Defaults
 
@@ -151,17 +153,17 @@ do
     sleep 5
 done
 
-temphexa=$(echo $data | awk -F ' ' '{print $7$6}'| tr [:lower:] [:upper:] )
-humhexa=$(echo $data | awk -F ' ' '{print $8}'| tr [:lower:] [:upper:])
-
-temperature100=$(echo "ibase=16; $temphexa" | bc)
-
-humidity=$(echo "ibase=16; $humhexa" | bc)
-temperature=$(echo "scale=2;$temperature100/100"|bc)
 debug_print "data: $data"
 
+temphexa=$(echo $data | awk -F ' ' '{print $7$6}'| tr [:lower:] [:upper:] )
+temperature100=$(echo "ibase=16; $temphexa" | bc)
+temperature=$(echo "scale=2;$temperature100/100"|bc)
+
+humhexa=$(echo $data | awk -F ' ' '{print $8}'| tr [:lower:] [:upper:])
+humidity=$(echo "ibase=16; $humhexa" | bc)
 
 debug_print "Temperature: $temperature, Humidity: $humidity, Battery: $battery"
+
 MQTT_TOPIC="$SENSOR_NAME"
 if [ -n "$MQTT_TOPIC_PREFIX" ]
 then
