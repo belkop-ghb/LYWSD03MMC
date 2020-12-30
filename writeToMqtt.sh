@@ -22,6 +22,12 @@ SENSOR_ADDRESS=""
 SENSOR_NAME=""
 DEBUG=0
 
+#######################################################################
+# No need to change things below this line.
+#######################################################################
+BATTERY_MIN=2100
+BATTERY_MAX=3100
+
 readonly USAGE="
 $0 -a [address] -n [sensor name]
 
@@ -135,32 +141,28 @@ do
     sleep 5
 done
 
-retry=0
-while true
-do
-    debug_print "Querying $SENSOR_ADDRESS for battery data."
-    battery=$(timeout 15 gatttool -b $SENSOR_ADDRESS --char-read --uuid 0x2a19  | awk '{print "ibase=16;", $4}' | bc)
-    rc=$?
-    if [ ${rc} -eq 0 ]; then
-        break
-    fi
-    if [ $retry -eq $MAXRETRY ]; then
-	debug_print "$MAXRETRY attemps made, aborting."
-        break
-    fi
-    retry=$((retry+1))
-    debug_print "Connection failed, retrying $retry/$MAXRETRY... "
-    sleep 5
-done
-
 debug_print "data: $data"
 
 temphexa=$(echo $data | awk -F ' ' '{print $7$6}'| tr [:lower:] [:upper:] )
 temperature100=$(echo "ibase=16; $temphexa" | bc)
-temperature=$(echo "scale=2;$temperature100/100"|bc)
+temperature=$(echo "scale=1;$temperature100/100"|bc)
 
 humhexa=$(echo $data | awk -F ' ' '{print $8}'| tr [:lower:] [:upper:])
 humidity=$(echo "ibase=16; $humhexa" | bc)
+
+bathexa=$(echo $data | awk -F ' ' '{print $10$9}'| tr [:lower:] [:upper:] )
+bat1000=$(echo "ibase=16; $bathexa" | bc)
+bat=$(echo "scale=2;$bat1000/1000" | bc)
+
+debug_print "BAT1000: $bat1000"
+debug_print "BAT: $bat"
+
+if ((bat1000>BATTERY_MAX));
+then
+	bat_perc=100.0
+else
+	bat_perc=$(echo "scale=2;(($bat1000-$BATTERY_MIN) / ($BATTERY_MAX - $BATTERY_MIN)*100)" | bc)
+fi
 
 debug_print "Temperature: $temperature, Humidity: $humidity, Battery: $battery"
 
@@ -187,11 +189,11 @@ if [ -n "$BROKER_IP" ]; then
 		echo "Humidity not valid: $humidity"
 	fi
 
-	if [[ "$battery" =~ ^[0-9]+(\.[0-9]+)?$ ]]
+	if [[ "$bat_perc" =~ ^[0-9]+(\.[0-9]+)?$ ]]
 	then
-		mqtt_publish "$MQTT_TOPIC/battery" "$battery"
+		mqtt_publish "$MQTT_TOPIC/battery" "$bat_perc"
 	else
-		echo "Battery level not valid: $battery"
+		echo "Battery level not valid: $bat_perc"
 	fi
 else
   debug_print "Broker not set."

@@ -27,6 +27,9 @@ debug_print() {
 
 DEBUG=1
 
+BATTERY_MIN=2100
+BATTERY_MAX=3100
+
 SENSORS=( "livingroom#a4:c1:38:0a:5b:87")
 
 for item in "${SENSORS[@]}" ; do
@@ -41,19 +44,38 @@ for item in "${SENSORS[@]}" ; do
     then
         debug_print "The reading failed"
     else
-        debug_print "Got data"        
+        debug_print "Got data"
+	
+	debug_print "$data"
 	
 	temphexa=$(echo $data | awk -F ' ' '{print $7$6}'| tr [:lower:] [:upper:] )
-        temperature100=$(echo "ibase=16; $temphexa" | bc)
+    temperature100=$(echo "ibase=16; $temphexa" | bc)
 	temperature=$(echo "scale=2;$temperature100/100"|bc)
 	
 	humhexa=$(echo $data | awk -F ' ' '{print $8}'| tr [:lower:] [:upper:])		
-        humidity=$(echo "ibase=16; $humhexa" | bc)	
+    humidity=$(echo "ibase=16; $humhexa" | bc)
+	
+	bathexa=$(echo $data | awk -F ' ' '{print $10$9}'| tr [:lower:] [:upper:] )
+	bat1000=$(echo "ibase=16; $bathexa" | bc)
+	bat=$(echo "scale=2;$bat1000/1000" | bc)
+
+	debug_print "BAT1000: $bat1000"
+	debug_print "BAT: $bat"
+
+	if ((bat1000>BATTERY_MAX));
+	then
+		bat_perc=100.0
+	else
+		bat_perc=$(echo "scale=2;(($bat1000-$BATTERY_MIN) / ($BATTERY_MAX - $BATTERY_MIN)*100)" | bc)
+	fi
+	
+	debug_print "BAT: $bat"
+	debug_print "BAT_PERC: $bat_perc"
         
-	battery=$(timeout 15 gatttool -b $mac_address --char-read --uuid 0x2a19  | awk '{print "ibase=16;", $4}' | bc)
+	#battery=$(timeout 15 gatttool -b $mac_address --char-read --uuid 0x2a19  | awk '{print "ibase=16;", $4}' | bc)
 		
-        debug_print "Temp:"$temperature
-        debug_print "Hum:"$humidity
-	debug_print "Batt:"$battery
+    debug_print "Temp:"$temperature
+    debug_print "Hum:"$humidity
+	debug_print "Batt:"$bat_perc
     fi
 done
