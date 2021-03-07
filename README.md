@@ -12,6 +12,21 @@ Example:
 ./writeToMqtt.sh -a a4:c1:0a:b2:6c:87 -n livingroom -r 3 -b 192.168.0.2 -u brokerUsername -P brokerPassword -d
 ```
 
+Required software:
+- sudo apt install bluez
+
+If you are running Ubuntu on RPI, you may need:
+- sudo apt install pi-bluetooth
+
+
+Troubleshooting:
+- _systemctl status bluetooth_ - checks bluetooth status (should be *active*)
+- _bluetoothctl_ - starts bluetooth utility
+  - _power on_
+  - _list_ - lists the host's controller
+  - _scan on_ - scans the nearby devices
+  - _scan off_ - stop scanning
+
 Feel free to modify the code according to your needs.
 
 If you find this code helpful, you can buy me a coffee ;-) -
