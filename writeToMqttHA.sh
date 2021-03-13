@@ -179,54 +179,16 @@ main() {
 	if [[ "$temperature" =~ ^-?[0-9]+(\.[0-9]+)?$ ]] && [[ "$humidity" =~ ^[0-9]+(\.[0-9]+)?$ ]] && [[ "$bat_perc" =~ ^[0-9]+(\.[0-9]+)?$ ]];
 	then
 		debug_print "Values are valid"
-		mosquitto_pub -h $BROKER_IP -t $MQTT_TOPIC"_temperature/config" -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -m '{"device_class": "temperature", "name": "'$SENSOR_NAME'_temperature", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_temperature", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "°C", "value_template": "'$temperature'","platform": "mqtt" }'
-		mosquitto_pub -h $BROKER_IP -t $MQTT_TOPIC"_humidity/config" -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -m '{"device_class": "humidity", "name": "'$SENSOR_NAME'_humidity", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_humidity", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "%", "value_template": "'$humidity'","platform": "mqtt" }'
-		mosquitto_pub -h $BROKER_IP -t $MQTT_TOPIC"_battlevel/config" -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -m '{"device_class": "battery", "name": "'$SENSOR_NAME'_battery", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_battery", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "%", "value_template": "'$bat_perc'","platform": "mqtt" }'
-#		mosquitto_pub -h $BROKER_IP -t $MQTT_TOPIC"_battvolt/config" -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -m '{"device_class": "voltage", "name": "'$2'_volt", "unique_id": "lywsd03mmc_'$2'_volt", "device": { "name":"lywsd03mmc_'$2'", "identifiers": "lywsd03mmc_'$2'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "homeassistant/sensor/'$2'/state", "unit_of_measurement": "v", "value_template": "{{ value_json.batteryvoltage}}","platform": "mqtt" }'
-		mosquitto_pub -h $BROKER_IP -t $MQTT_TOPIC"/state" -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -m '{ "temperature": '$temperature', "humidity": '$humidity', "batterylevel": '$bat_perc' }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_temperature/config" -m '{"device_class": "temperature", "name": "'$SENSOR_NAME'_temperature", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_temperature", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "°C", "value_template": "'$temperature'","platform": "mqtt" }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_humidity/config" -m '{"device_class": "humidity", "name": "'$SENSOR_NAME'_humidity", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_humidity", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "%", "value_template": "'$humidity'","platform": "mqtt" }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_battlevel/config" -m '{"device_class": "battery", "name": "'$SENSOR_NAME'_battery", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_battery", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "%", "value_template": "'$bat_perc'","platform": "mqtt" }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"/state" -m '{ "temperature": '$temperature', "humidity": '$humidity', "batterylevel": '$bat_perc' }'
 		debug_print "Done"
-	else
-		valid = 0
 	fi
 
 
 }
 
-round() {
-  printf "%.${2}f" "${1}"
-}
-
-mqtt_publish() {
-	local topic=$1
-	local message=$2
-	COMMAND="mosquitto_pub -h $BROKER_IP"
-	if [ -n "$BROKER_USR" ]
-	then
-		COMMAND="$COMMAND -u $BROKER_USR"
-	fi
-	if [ -n "$BROKER_PWD" ]
-	then
-		COMMAND="$COMMAND -P $BROKER_PWD"
-	fi
-	
-	COMMAND=$COMMAND' -t '$topic' -m "'$message'" --retain -i "mibridge"'
-	
-	
-	if [ $DEBUG -eq 1 ]; then
-		COMMAND="$COMMAND -d"
-	fi
-	
-	debug_print "Command: $COMMAND"
-	
-	published=eval ${COMMAND}
-	rc=$?
-	if [ ${rc} -eq 0 ]; then
-		debug_print "Publishing value as $topic"
-		else
-		debug_print "Publishing failed"
-	fi
-	
-}
 
 parse_command_line_parameters $@
 main
