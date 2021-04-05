@@ -172,17 +172,17 @@ main() {
 		MQTT_TOPIC="$MQTT_TOPIC_PREFIX/$MQTT_TOPIC"
 	fi
 
-
+	MQTT_DEVICE_STATE_TOPIC=$MQTT_TOPIC"/state"
 
 	valid=1
 
 	if [[ "$temperature" =~ ^-?[0-9]+(\.[0-9]+)?$ ]] && [[ "$humidity" =~ ^[0-9]+(\.[0-9]+)?$ ]] && [[ "$bat_perc" =~ ^[0-9]+(\.[0-9]+)?$ ]];
 	then
 		debug_print "Values are valid"
-		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_temperature/config" -m '{"device_class": "temperature", "name": "'$SENSOR_NAME'_temperature", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_temperature", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "°C", "value_template": "'$temperature'","platform": "mqtt" }'
-		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_humidity/config" -m '{"device_class": "humidity", "name": "'$SENSOR_NAME'_humidity", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_humidity", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "%", "value_template": "'$humidity'","platform": "mqtt" }'
-		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_battlevel/config" -m '{"device_class": "battery", "name": "'$SENSOR_NAME'_battery", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_battery", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_TOPIC'/state", "unit_of_measurement": "%", "value_template": "'$bat_perc'","platform": "mqtt" }'
-		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"/state" -m '{ "temperature": '$temperature', "humidity": '$humidity', "batterylevel": '$bat_perc' }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_temperature/config" -m '{"device_class": "temperature", "name": "'$SENSOR_NAME'_temperature", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_temperature", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_DEVICE_STATE_TOPIC'", "unit_of_measurement": "°C", "value_template": "{{ value_json.temperature }}","platform": "mqtt" }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_humidity/config" -m '{"device_class": "humidity", "name": "'$SENSOR_NAME'_humidity", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_humidity", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_DEVICE_STATE_TOPIC'", "unit_of_measurement": "%", "value_template": "{{ value_json.humidity }}","platform": "mqtt" }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_TOPIC"_battlevel/config" -m '{"device_class": "battery", "name": "'$SENSOR_NAME'_battery", "unique_id": "lywsd03mmc_'$SENSOR_NAME'_battery", "device": { "name":"lywsd03mmc_'$SENSOR_NAME'", "identifiers": "lywsd03mmc_'$SENSOR_NAME'", "model": "LYWSD03MMC", "manufacturer": "Xiaomi"}, "state_topic": "'$MQTT_DEVICE_STATE_TOPIC'", "unit_of_measurement": "%", "value_template": "{{ value_json.batterylevel }}","platform": "mqtt" }'
+		mosquitto_pub -h $BROKER_IP -u $BROKER_USR -P $BROKER_PWD -i "mibridge" -t $MQTT_DEVICE_STATE_TOPIC -m '{ "temperature": '$temperature', "humidity": '$humidity', "batterylevel": '$bat_perc' }'
 		debug_print "Done"
 	fi
 

@@ -1,7 +1,8 @@
-There are two scripts in the repository:
+There are three scripts in the repository:
 
 - readSensors.sh
 - writeToMqtt.sh
+- writeToMqttHA.sh
 
 readSensors.sh - just for test purpose. Define an array of your sensors (name#MAC address) and run the script. Sensor data will be displayed in the console.
 
@@ -10,6 +11,13 @@ writeToMqtt.sh - script with many input params. This can be used to read the dat
 Example: 
 ```sh
 ./writeToMqtt.sh -a a4:c1:0a:b2:6c:87 -n livingroom -r 3 -b 192.168.0.2 -u brokerUsername -P brokerPassword -d
+```
+
+writeToMqttHA.sh - similar to the writeToMqtt, but writes the data to MQTT in a HomeAssistant format. HomeAssistant can find the devices via MQTT autodiscovery.
+
+Example: 
+```
+./writeToMqttHA.sh --address a4:c1:0a:b2:6c:87 --name livingroom --retries 5 --broker 192.168.0.2 --prefix /homeassistant --usr brokerUsername --pwd brokerPassword --debug
 ```
 
 Required software:
