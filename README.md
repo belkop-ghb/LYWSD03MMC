@@ -1,3 +1,5 @@
+Are you using Xiaomi LYWSD03MMC bluetooth temperature sensors and want to use the built-in bluetooth receiver on your computer to receive the data? These scripts can help you to do this.
+
 There are three scripts in the repository:
 
 - readSensors.sh
